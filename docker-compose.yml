@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+
+  main-nginx:
+    image: centerforopenscience/nginx
+    command:
+      - nginx
+      - -c
+      - /nginx/nginx.conf
+      - -g
+      - daemon off;
+    volumes:
+      - ./nginx:/nginx
+      - ./static:/static
+    ports:
+      - "9090:80"
+    networks:
+      - internal
+
+  prerender-nginx:
+    image: centerforopenscience/nginx
+    command:
+      - nginx
+      - -c
+      - /nginx/nginx.conf
+      - -g
+      - daemon off;
+    volumes:
+      - ./prerender/nginx.conf:/nginx/nginx.conf
+    ports:
+      - "9091:9091"
+    networks:
+      - internal
+
+  prerender:
+    image: centerforopenscience/prerender
+    volumes:
+      - ./prerender/server.js:/code/server
+    ports:
+      - "3000:3000"
+    environment:
+      ALLOWED_DOMAINS: 'domain.name,domain2.name'
+      REDIS_URL: redis://192.168.168.167:6379/0
+      PAGE_TTL: 432000
+    networks:
+      - internal
+
+  redis:
+    image: "redis:alpine"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
